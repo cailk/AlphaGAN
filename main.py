@@ -2,19 +2,21 @@
 # @Date    : 2019-08-04
 # @Author  : cailk (cailikun007@gmail.com)
 # @Link    : https://github.com/cailk
-import argparse, os, torch
+
+import os
+import argparse
+import torch
 import numpy as np
-from GAN import GAN
-from WGAN import WGAN
-from WGAN_GP import WGAN_GP
-from AlphaGAN import AlphaGAN
+
+from models import GAN, WGAN, WGAN_GP, AlphaGAN
+from data import dataloader
 
 '''parsing and configuration'''
 def parse_args():
     desc = 'Pytorch implementation of GAN collections'
     parser = argparse.ArgumentParser(description=desc)
 
-    parser.add_argument('--gan_type', type=str, default='WDCGAN', choices=['GAN', 'WGAN', 'WGAN_GP', 'AlphaGAN'], help='The type of GAN')
+    parser.add_argument('--gan_type', type=str, default='AlphaGAN', choices=['GAN', 'WGAN', 'WGAN_GP', 'AlphaGAN'], help='The type of GAN')
     parser.add_argument('--dataset', type=str, default='celeba', choices=['mnist', 'fashion-mnist', 'svhn', 'cifar10', 'celeba'], help='The name of dataset')
     parser.add_argument('--epoch', type=int, default=60, help='The number of epochs to run')
     parser.add_argument('--batch_size', type=int, default=64, help='The size of batch')
@@ -67,14 +69,16 @@ def main():
     if args.benchmark_mode:
         torch.backends.cudnn.benchmark = True
 
+    dataloader = dataloader(args.dataset, args.input_size, args.batch_size)
+
     if args.gan_type == 'GAN':
-        gan = GAN(args)
+        gan = GAN(args, dataloader)
     elif args.gan_type == 'WGAN':
-        gan = WGAN(args)
+        gan = WGAN(args, dataloader)
     elif args.gan_type == 'WGAN_GP':
-        gan = WGAN_GP(args)
+        gan = WGAN_GP(args, dataloader)
     elif args.gan_type == 'AlphaGAN':
-        gan = AlphaGAN(args)
+        gan = AlphaGAN(args, dataloader)
     else:
         raise Exception('[!] There is no option for ' + args.gan_type)
 

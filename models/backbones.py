@@ -3,8 +3,9 @@
 # @Author  : cailk (cailikun007@gmail.com)
 # @Link    : https://github.com/cailk
 
-import utils
 import torch.nn as nn
+
+from ..utils.utils import initialize_weights
 
 class generator_a(nn.Module):
 	def __init__(self, nz=64, nc=1):
@@ -26,7 +27,7 @@ class generator_a(nn.Module):
 			nn.ConvTranspose2d(64, nc, 4, 2, 1),
 			nn.Tanh(),
 		)
-		utils.initialize_weights(self)
+		initialize_weights(self)
 
 	def forward(self, input):
 		x = self.fc(input)
@@ -52,7 +53,7 @@ class discriminator_a(nn.Module):
 			nn.LeakyReLU(0.2, inplace=True),
 			nn.Linear(1024, 1),
 		)
-		utils.initialize_weights(self)
+		initialize_weights(self)
 
 	def forward(self, input):
 		x = self.conv(input)
@@ -84,7 +85,7 @@ class generator_b(nn.Module):
 			nn.ConvTranspose2d(64, nc, 4, 2, 1),
 			nn.Tanh(),
 		)
-		utils.initialize_weights(self)
+		initialize_weights(self)
 
 	def forward(self, input):
 		x = self.fc(input)
@@ -114,7 +115,7 @@ class discriminator_b(nn.Module):
 		self.fc = nn.Sequential(
 			nn.Linear(256, 1),
 		)
-		utils.initialize_weights(self)
+		initialize_weights(self)
 
 	def forward(self, input):
 		x = self.conv(input)

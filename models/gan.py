@@ -2,19 +2,19 @@
 # @Date    : 2019-07-29
 # @Author  : cailk (cailikun007@gmail.com)
 # @Link    : https://github.com/cailk
+
 import os
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import utils
-from inception_score import inception_score
-from dataloader import dataloader
 from tqdm import tqdm
-from model import *
+
+from backbones import *
+from ..utils import print_network, generate_animation, loss_plot, IS_plot, save_images, inception_score
 
 class GAN(object):
-	def __init__(self, args):
+	def __init__(self, args, dataloader):
 		# parameters
 		self.epoch = args.epoch
 		self.sample_num = 100
@@ -28,15 +28,15 @@ class GAN(object):
 		self.z_dim = args.nz
 
 		# load dataset
-		self.data_loader = dataloader(self.dataset, self.input_size, self.batch_size)
+		self.data_loader = dataloader
 
 		# network init
 		if self.dataset == 'mnist' or self.dataset == 'fashion-mnist':
-			self.G = generator_mnist(nz=self.z_dim)
-			self.D = discriminator_mnist()
+			self.G = generator_a(nz=self.z_dim)
+			self.D = discriminator_a()
 		else:
-			self.G = generator_celeba(nz=self.z_dim)
-			self.D = discriminator_celeba()
+			self.G = generator_b(nz=self.z_dim)
+			self.D = discriminator_b()
 
 		self.G_optimizer = optim.Adam(self.G.parameters(), lr=args.lrG, betas=(args.beta1, args.beta2))
 		self.D_optimizer = optim.Adam(self.D.parameters(), lr=args.lrD, betas=(args.beta1, args.beta2))
@@ -49,8 +49,8 @@ class GAN(object):
 			self.criterion = nn.BCEWithLogitsLoss()
 
 		print('---------- Networks architecture -------------')
-		utils.print_network(self.G)
-		utils.print_network(self.D)
+		print_network(self.G)
+		print_network(self.D)
 		print('-----------------------------------------------')
 
 		# fixed noise
@@ -111,9 +111,9 @@ class GAN(object):
 
 		print('[*] Training finished!... save training results')
 		self.save()
-		utils.generate_animation(self.result_dir + '/' + self.dataset + '/' + self.model_name + '/' + self.model_name, self.epoch)
-		utils.loss_plot(self.train_hist, os.path.join(self.save_dir, self.dataset, self.model_name), self.model_name)
-		utils.IS_plot(self.IS, os.path.join(self.save_dir, self.dataset, self.model_name), self.model_name)
+		generate_animation(self.result_dir + '/' + self.dataset + '/' + self.model_name + '/' + self.model_name, self.epoch)
+		loss_plot(self.train_hist, os.path.join(self.save_dir, self.dataset, self.model_name), self.model_name)
+		IS_plot(self.IS, os.path.join(self.save_dir, self.dataset, self.model_name), self.model_name)
 
 	def visualize_results(self, epoch, fix=True):
 		self.G.eval()
@@ -141,8 +141,8 @@ class GAN(object):
 			samples = samples.detach()
 
 		samples = (samples + 1) / 2
-		utils.save_images(samples[:image_frame_dim ** 2], image_frame_dim,
-						  self.result_dir + '/' + self.dataset + '/' + self.model_name + '/' + self.model_name + '_epoch%03d' % epoch + '.png')
+		save_images(samples[:image_frame_dim ** 2], image_frame_dim,
+			self.result_dir + '/' + self.dataset + '/' + self.model_name + '/' + self.model_name + '_epoch%03d' % epoch + '.png')
 
 	def calculate_is(self):
 		self.G.eval()

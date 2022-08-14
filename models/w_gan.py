@@ -6,13 +6,13 @@ import os
 import numpy as np
 import torch
 import torch.optim as optim
-import utils
-from dataloader import dataloader
 from tqdm import tqdm
-from model import generator_a, discriminator_a, generator_b, discriminator_b
+
+from backbones import *
+from utils import print_network, generate_animation, loss_plot, save_images
 
 class WGAN(object):
-	def __init__(self, args):
+	def __init__(self, args, dataloader):
 		# parameters
 		self.epoch = args.epoch
 		self.sample_num = 100
@@ -27,7 +27,7 @@ class WGAN(object):
 		self.n_critic = 5
 
 		# load dataset
-		self.data_loader = dataloader(self.dataset, self.input_size, self.batch_size)
+		self.data_loader = dataloader
 
 		# network init
 		if self.dataset == 'mnist' or self.dataset == 'fashion-mnist':
@@ -45,8 +45,8 @@ class WGAN(object):
 			self.D.cuda()
 
 		print('---------- Networks architecture -------------')
-		utils.print_network(self.G)
-		utils.print_network(self.D)
+		print_network(self.G)
+		print_network(self.D)
 		print('-----------------------------------------------')
 
 		# fixed noise
@@ -104,8 +104,8 @@ class WGAN(object):
 
 		print('[*] Training finished!... save training results')
 		self.save()
-		utils.generate_animation(self.result_dir + '/' + self.dataset + '/' + self.model_name + '/' + self.model_name, self.epoch)
-		utils.loss_plot(self.train_hist, os.path.join(self.save_dir, self.dataset, self.model_name), self.model_name)
+		generate_animation(self.result_dir + '/' + self.dataset + '/' + self.model_name + '/' + self.model_name, self.epoch)
+		loss_plot(self.train_hist, os.path.join(self.save_dir, self.dataset, self.model_name), self.model_name)
 
 	def visualize_results(self, epoch, fix=True):
 		self.G.eval()
@@ -133,8 +133,8 @@ class WGAN(object):
 			samples = samples.detach()
 
 		samples = (samples + 1) / 2
-		utils.save_images(samples[:image_frame_dim ** 2], image_frame_dim,
-						  self.result_dir + '/' + self.dataset + '/' + self.model_name + '/' + self.model_name + '_epoch%03d' % epoch + '.png')
+		save_images(samples[:image_frame_dim ** 2], image_frame_dim,
+			self.result_dir + '/' + self.dataset + '/' + self.model_name + '/' + self.model_name + '_epoch%03d' % epoch + '.png')
 
 	def save(self):
 		save_dir = os.path.join(self.save_dir, self.dataset, self.model_name)
